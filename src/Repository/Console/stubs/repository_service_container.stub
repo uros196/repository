@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use Repository\ServiceRepository;
+use {{ namespacedModel }};
+
+class {{ class }} extends ServiceRepository
+{
+    /**
+     * Model class
+     *
+     * @var string $model
+     */
+    protected $model = {{ model }}::class;
+}

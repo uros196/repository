@@ -1,0 +1,24 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\Facade;
+use {{ serviceContainerNamespace }}\{{ serviceContainerClass }};
+
+/**
+ * Class {{ class }}
+ *
+ * @method static \Illuminate\Database\Eloquent\Collection testQueryBuild()
+ */
+class {{ class }} extends Facade
+{
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor()
+    {
+        return {{ serviceContainerClass }}::class;
+    }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "repository/repository",
+  "description": "Repository classes for communication with database",
+  "authors": [
+    {
+      "name": "Uros Pantelic",
+      "email": "urospantelic196@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "license": "MIT",
+  "require": {
+    "php": "^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7.5.13"
+  },
+  "autoload": {
+    "psr-4": {
+      "Repository\\": "src/Repository"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Repository\\Tests": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Repository\\Providers\\RepositoryServiceProvider"
+      ]
+    }
+  }
+}
