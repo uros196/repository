@@ -8,7 +8,16 @@ use {{ serviceContainerNamespace }}\{{ serviceContainerClass }};
 /**
  * Class {{ class }}
  *
- * @method static \Illuminate\Database\Eloquent\Collection testQueryBuild()
+ * @method static \Illuminate\Database\Eloquent\Model firstWhere($column, $operator = null, $value = null, $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Model find($id, array $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection findMany($ids, array $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Model findOrFail($id, array $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Model|static findOrNew($id, array $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Model|static firstOrNew(array $attributes = [], array $values = [])
+ * @method static \Illuminate\Database\Eloquent\Model|static firstOrCreate(array $attributes, array $values = [])
+ * @method static \Illuminate\Database\Eloquent\Model|static firstOrFail($columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Model|static|mixed firstOr($columns = ['*'], \Closure $callback = null)
+ * @method static mixed value(string $column)
  */
 class {{ class }} extends Facade
 {
