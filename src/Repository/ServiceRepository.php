@@ -8,7 +8,8 @@ abstract class ServiceRepository
 {
     use Container\Paginator,
         Container\CacheRoutine,
-        Container\BaseMethods;
+        Container\BaseMethods,
+        Container\QueryBuilder;
 
     /**
      * @var string $model
@@ -68,6 +69,10 @@ abstract class ServiceRepository
      */
     protected function get($columns = ['*'])
     {
-        return $this->query_builder->get($columns);
+        $cache_key = $this->generateCacheKey($this->query_builder);
+
+        return $this->buildCacheWithKey($cache_key, function () use ($columns) {
+            return $this->query_builder->get($columns);
+        });
     }
 }

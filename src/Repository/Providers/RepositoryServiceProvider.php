@@ -32,5 +32,19 @@ class RepositoryServiceProvider extends ServiceProvider
                 ServiceContainerMakeCommand::class
             ]);
         }
+
+        $this->publish();
+    }
+
+    /**
+     * Publish package configuration.
+     *
+     * @return void
+     */
+    protected function publish(): void
+    {
+        $this->publishes([
+            __DIR__ . "/../config/repository.php" => config_path('repository.php')
+        ]);
     }
 }

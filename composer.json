@@ -31,5 +31,10 @@
         "Repository\\Providers\\RepositoryServiceProvider"
       ]
     }
+  },
+  "scripts": {
+    "post-package-install": [
+      "@php artisn vendor:publish"
+    ]
   }
 }
