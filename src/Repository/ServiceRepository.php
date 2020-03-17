@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class ServiceRepository
 {
+    use Container\Paginator,
+        Container\CacheRoutine,
+        Container\BaseMethods;
+
     /**
      * @var string $model
      */
@@ -41,11 +45,6 @@ abstract class ServiceRepository
         return $this->model_instace;
     }
 
-    public function finfOrFail(int $id): Model
-    {
-        return $this->getModel()::findOrFail($id);
-    }
-
     protected function registerModel()
     {
         return $this->model;
@@ -70,26 +69,5 @@ abstract class ServiceRepository
     protected function get($columns = ['*'])
     {
         return $this->query_builder->get($columns);
-    }
-
-    /**
-     * @param $method
-     * @param $parameters
-     * @return mixed
-     * @throws \Exception
-     */
-    public function __call($method, $parameters)
-    {
-        $default_service_container = new DefaultServiceContainer($this->getModel());
-        if (method_exists($default_service_container, $method)) {
-            return $default_service_container->$method(...$parameters);
-        }
-
-        throw new \Exception("The method '{$method}' do not exists.");
-    }
-
-    public static function __callStatic($method, $parameters)
-    {
-        return (new static)->$method(...$parameters);
     }
 }
