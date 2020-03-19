@@ -22,11 +22,6 @@ abstract class ServiceRepository
     private $model_instace;
 
     /**
-     * @var \Illuminate\Database\Eloquent\Builder $query_builder
-     */
-    private $query_builder;
-
-    /**
      * Repository constructor.
      * @throws \Exception
      */
@@ -41,38 +36,137 @@ abstract class ServiceRepository
         }
     }
 
+    /**
+     * Return instance of actual model.
+     *
+     * @return Model
+     */
     protected function getModel(): Model
     {
         return $this->model_instace;
     }
 
+    /**
+     * Get name of actial model.
+     *
+     * @return string
+     * @throws \Exception
+     */
     protected function registerModel()
     {
+        if (empty($this->model)) {
+            throw new \Exception("You must setup model class");
+        }
+
+        if (!is_string($this->model)) {
+            throw new \Exception("Model name must be a string.");
+        }
+
         return $this->model;
     }
 
     /**
-     * @param \Closure|string $query
-     * @return void
+     * Execute the query as a "select" statement.
+     *
+     * @param  array|string  $columns
+     * @return mixed
      */
-    protected function build($query): void
+    protected function get($columns = ['*'])
     {
-        if ($query instanceof \Closure) {
-            $query_builder = $query($this->getModel());
-            $this->query_builder = $query_builder;
+        if (!$this->isBuilderRequired()) {
+            $cache_key = $this->generateCacheKey();
+
+            return $this->buildCacheWithKey($cache_key, function () use ($columns) {
+                return $this->getBuilder()->get($columns);
+            });
+        } else {
+            return $this->returnQueryBuilder();
         }
     }
 
     /**
-     * @param  array|string  $columns
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection
+     * Retrieve the "count" result of the query.
+     *
+     * @param  string  $columns
+     * @return int
      */
-    protected function get($columns = ['*'])
+    protected function count($columns = '*')
     {
-        $cache_key = $this->generateCacheKey($this->query_builder);
+        return $this->aggregate(__FUNCTION__, $columns);
+    }
 
-        return $this->buildCacheWithKey($cache_key, function () use ($columns) {
-            return $this->query_builder->get($columns);
-        });
+    /**
+     * Retrieve the minimum value of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    protected function min($column)
+    {
+        return $this->aggregate(__FUNCTION__, $column);
+    }
+
+    /**
+     * Retrieve the maximum value of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    protected function max($column)
+    {
+        return $this->aggregate(__FUNCTION__, $column);
+    }
+
+    /**
+     * Retrieve the sum of the values of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    protected function sum($column)
+    {
+        return $this->aggregate(__FUNCTION__, $column);
+    }
+
+    /**
+     * Retrieve the average of the values of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    protected function avg($column)
+    {
+        return $this->aggregate(__FUNCTION__, $column);
+    }
+
+    /**
+     * Execute raw query
+     *
+     * @param string $query
+     * @return array
+     */
+    protected function executeRaw(string $query)
+    {
+        return $this->buildCache($query);
+    }
+
+    /**
+     * Execute an aggregate function on the database.
+     *
+     * @param  string  $function
+     * @param  string  $columns
+     * @return mixed
+     */
+    private function aggregate(string $function, $columns)
+    {
+        if (!$this->isBuilderRequired()) {
+            $cache_key = $this->generateCacheKey($this->getSql(), [$function, 'aggregate']);
+
+            return $this->buildCacheWithKey($cache_key, function () use ($function, $columns) {
+                return $this->getBuilder()->{$function}($columns);
+            });
+        } else {
+            return $this->returnQueryBuilder();
+        }
     }
 }

@@ -17,7 +17,7 @@ trait BaseMethods
     public function firstWhere($column, $operator = null, $value = null, $boolean = 'and')
     {
         return $this->buildCache(function () use ($column, $operator, $value, $boolean) {
-            return $this->getModel()::firstWhere($column, $operator, $value, $boolean);
+            return $this->getBuilder()->firstWhere($column, $operator, $value, $boolean);
         });
     }
 
@@ -31,7 +31,7 @@ trait BaseMethods
     public function find($id, $columns = ['*'])
     {
         return $this->buildCache(function () use ($id, $columns) {
-            return $this->getModel()::find($id, $columns);
+            return $$this->getBuilder()->find($id, $columns);
         });
     }
 
@@ -45,7 +45,7 @@ trait BaseMethods
     public function findMany($ids, $columns = ['*'])
     {
         return $this->buildCache(function () use ($ids, $columns) {
-            return $this->getModel()::findMany($ids, $columns);
+            return $this->getBuilder()->findMany($ids, $columns);
         });
     }
 
@@ -61,7 +61,7 @@ trait BaseMethods
     public function findOrFail($id, $columns = ['*'])
     {
         return $this->buildCache(function () use ($id, $columns) {
-            return $this->getModel()::findOrFail($id, $columns);
+            return $this->getBuilder()->findOrFail($id, $columns);
         });
     }
 
@@ -75,7 +75,7 @@ trait BaseMethods
     public function findOrNew($id, $columns = ['*'])
     {
         return $this->buildCache(function () use ($id, $columns) {
-            return $this->getModel()::findOrNew($id, $columns);
+            return $this->getBuilder()->findOrNew($id, $columns);
         });
     }
 
@@ -89,7 +89,7 @@ trait BaseMethods
     public function firstOrNew(array $attributes = [], array $values = [])
     {
         return $this->buildCache(function () use ($attributes, $values) {
-            return $this->getModel()::firstOrNew($attributes, $values);
+            return $this->getBuilder()->firstOrNew($attributes, $values);
         });
     }
 
@@ -103,7 +103,7 @@ trait BaseMethods
     public function firstOrCreate(array $attributes, array $values = [])
     {
         return $this->buildCache(function () use ($attributes, $values) {
-            return $this->getModel()::firstOrCreate($attributes, $values);
+            return $this->getBuilder()->firstOrCreate($attributes, $values);
         });
     }
 
@@ -118,7 +118,7 @@ trait BaseMethods
     public function firstOrFail($columns = ['*'])
     {
         return $this->buildCache(function () use ($columns) {
-            return $this->getModel()::firstOrFail($columns);
+            return $this->getBuilder()->firstOrFail($columns);
         });
     }
 
@@ -132,7 +132,7 @@ trait BaseMethods
     public function firstOr($columns = ['*'], \Closure $callback = null)
     {
         return $this->buildCache(function () use ($columns, $callback) {
-            return $this->getModel()::firstOr($columns, $callback);
+            return $this->getBuilder()->firstOr($columns, $callback);
         });
     }
 
@@ -145,7 +145,7 @@ trait BaseMethods
     public function value($column)
     {
         return $this->buildCache(function () use ($column) {
-            return $this->getModel()::value($column);
+            return $this->getBuilder()->value($column);
         });
     }
 }

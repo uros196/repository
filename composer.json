@@ -34,7 +34,7 @@
   },
   "scripts": {
     "post-package-install": [
-      "@php artisn vendor:publish"
+      "@php artisan vendor:publish --provider Repository\\Providers\\RepositoryServiceProvider"
     ]
   }
 }

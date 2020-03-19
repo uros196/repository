@@ -2,31 +2,31 @@
 
 namespace Repository\Container;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 trait CacheRoutine
 {
     /**
      * @var string $cache_store_engine
      */
-    protected $cache_store_engine;
+    private $cache_store_engine;
 
     /**
      * @var bool $is_caching
      */
-    protected $is_caching;
+    private $is_caching;
 
     /**
      * @var string $remember_type
      */
-    protected $remember_type = 'remember';
+    private $remember_type = 'remember';
 
     /**
      * @var \DateTimeInterface|\DateInterval|int $remember_time
      */
-    protected $duration;
+    private $duration;
 
 
 
@@ -94,7 +94,7 @@ trait CacheRoutine
      * @param \Closure|string $callback
      * @return mixed
      */
-    public function buildCache($callback)
+    protected function buildCache($callback)
     {
         return $this->execute($this->generateCacheKey($callback), $callback);
     }
@@ -106,7 +106,7 @@ trait CacheRoutine
      * @param \Closure|string $callback
      * @return mixed
      */
-    public function buildCacheWithKey(string $key, $callback)
+    protected function buildCacheWithKey(string $key, $callback)
     {
         return $this->execute($key, $callback);
     }
@@ -196,17 +196,41 @@ trait CacheRoutine
      * Generate cache key based on query.
      *
      * @param \Closure|string $query
+     * @param \Illuminate\Contracts\Support\Arrayable|array|string $tags
      * @return string
      */
-    protected function generateCacheKey($query)
+    protected function generateCacheKey($query = null, $tags = '')
     {
         $app_key = config('app.key');
+        $slug = !empty($query) ? $this->stringifyQuery($query) : $this->getSql();
 
-        if ($query instanceof \Closure) {
-            $query = $query->toSql();
+        return "_".class_basename($this->getModel())."_"
+                .md5($slug . $app_key)
+                .$this->extractTags($tags);
+    }
+
+    /**
+     * Transform query into a string.
+     *
+     * @param $query
+     * @return string
+     */
+    protected function stringifyQuery($query)
+    {
+        return serialize($query);
+    }
+
+    /**
+     * @param \Illuminate\Contracts\Support\Arrayable|array|string $tags
+     * @return string
+     */
+    protected function extractTags($tags)
+    {
+        if (Arr::accessible($tags)) {
+            $tags = implode("_", $tags);
         }
 
-        return "_".class_basename($this->getModel())."_".Hash::make($query . $app_key);
+        return !empty($tags) ? "_{$tags}_" : '';
     }
 
     /**

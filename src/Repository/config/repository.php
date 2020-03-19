@@ -17,6 +17,6 @@ return [
         'duration' => 1000,
 
         // use cache engine
-        'engine' => 'redis'
+        'engine' => config('cache.default')
     ]
 ];
