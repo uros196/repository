@@ -2,6 +2,8 @@
 
 namespace Repository\Container;
 
+use Psy\Exception\TypeErrorException;
+
 trait QueryBuilder
 {
     /**
@@ -9,7 +11,7 @@ trait QueryBuilder
      *
      * @var \Illuminate\Database\Eloquent\Builder
      */
-    private $query;
+    private $query_builder;
 
     /**
      * @var bool $is_builder_required
@@ -36,11 +38,11 @@ trait QueryBuilder
      */
     protected function getBuilder()
     {
-        if (empty($this->query)) {
-            $this->query = $this->getModel()->newQuery();
+        if (empty($this->query_builder)) {
+            $this->query_builder = $this->getModel()->newQuery();
         }
 
-        return $this->query;
+        return $this->query_builder;
     }
 
     /**
@@ -61,9 +63,35 @@ trait QueryBuilder
      */
     protected function buildQuery(\Closure $callback)
     {
-        $this->query = $callback($this->getBuilder());
+        $this->query_builder = $callback($this->getBuilder());
+
+        if (!$this->query_builder instanceof \Illuminate\Database\Eloquent\Builder) {
+            $this->thorwTypeErrorException();
+        }
 
         return $this;
+    }
+
+    /**
+     * Throw an exception if the user try to execute query while creating it.
+     *
+     * @return void
+     * @throws TypeErrorException
+     */
+    protected function thorwTypeErrorException()
+    {
+        throw new TypeErrorException("You can not execute query while creating it.");
+    }
+
+    /**
+     * Transform query into a string.
+     *
+     * @param $query
+     * @return string
+     */
+    protected function stringifyQuery($query)
+    {
+        return serialize($query);
     }
 
     /**

@@ -4,7 +4,6 @@ namespace Repository\Container;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 trait CacheRoutine
 {
@@ -91,76 +90,25 @@ trait CacheRoutine
     /**
      * Take results from cache or database with auto generated key.
      *
-     * @param \Closure|string $callback
+     * @param \Closure $callback
      * @return mixed
      */
-    protected function buildCache($callback)
+    protected function buildCache(\Closure $callback)
     {
-        return $this->execute($this->generateCacheKey($callback), $callback);
+        $key = $this->stringifyQuery($callback);
+        return $this->execute($this->generateCacheKey($key), $callback);
     }
 
     /**
      * Take results from cache or database with passed key.
      *
      * @param string $key
-     * @param \Closure|string $callback
-     * @return mixed
-     */
-    protected function buildCacheWithKey(string $key, $callback)
-    {
-        return $this->execute($key, $callback);
-    }
-
-    /**
-     * Execute all type of queries.
-     *
-     * @param string $key
-     * @param \Closure|string $callback
-     * @return array|mixed
-     */
-    protected function execute(string $key, $callback)
-    {
-        if ($callback instanceof \Closure) {
-            return $this->executeClosureQuery($key, $callback);
-        }
-
-        return $this->executeStringQuery($key, $callback);
-    }
-
-    /**
-     * Executing closure type query.
-     *
-     * @param string $key
      * @param \Closure $callback
      * @return mixed
      */
-    protected function executeClosureQuery(string $key, \Closure $callback)
+    protected function buildCacheWithKey(string $key, \Closure $callback)
     {
-        if ($this->isCaching()) {
-            return $this->cacheContainer($key, $callback);
-        }
-
-        // if not using cache, just execute query
-        return $callback();
-    }
-
-    /**
-     * Executing string type query.
-     *
-     * @param string $key
-     * @param string $query
-     * @return array
-     */
-    protected function executeStringQuery(string $key, string $query)
-    {
-        if ($this->isCaching()) {
-            return $this->cacheContainer($key, function () use ($query) {
-                return DB::select($query);
-            });
-        }
-
-        // if not using cache, just execute query
-        return DB::select($query);
+        return $this->execute($key, $callback);
     }
 
     /**
@@ -168,9 +116,9 @@ trait CacheRoutine
      *
      * @param string $key
      * @param \Closure $callback
-     * @return mixed
+     * @return array|mixed
      */
-    protected function cacheContainer(string $key, \Closure $callback)
+    private function execute(string $key, \Closure $callback)
     {
         $engine   = $this->getCacheEngine();
         $duration = $this->getDuration();
@@ -195,29 +143,18 @@ trait CacheRoutine
     /**
      * Generate cache key based on query.
      *
-     * @param \Closure|string $query
+     * @param string $key
      * @param \Illuminate\Contracts\Support\Arrayable|array|string $tags
      * @return string
      */
-    protected function generateCacheKey($query = null, $tags = '')
+    protected function generateCacheKey(string $key = null, $tags = '')
     {
         $app_key = config('app.key');
-        $slug = !empty($query) ? $this->stringifyQuery($query) : $this->getSql();
+        $key     = !empty($key) ?: $this->getSql();
 
-        return "_".class_basename($this->getModel())."_"
-                .md5($slug . $app_key)
-                .$this->extractTags($tags);
-    }
-
-    /**
-     * Transform query into a string.
-     *
-     * @param $query
-     * @return string
-     */
-    protected function stringifyQuery($query)
-    {
-        return serialize($query);
+        return "_" . class_basename($this->getModel()) . "_"
+                . md5($key . $app_key)
+                . $this->extractTags($tags);
     }
 
     /**
@@ -226,9 +163,7 @@ trait CacheRoutine
      */
     protected function extractTags($tags)
     {
-        if (Arr::accessible($tags)) {
-            $tags = implode("_", $tags);
-        }
+        $tags = implode("_", Arr::wrap($tags));
 
         return !empty($tags) ? "_{$tags}_" : '';
     }
@@ -265,9 +200,19 @@ trait CacheRoutine
      * Take cache remember type.
      *
      * @return string
+     * @throws \Exception
      */
     protected function getRememberType()
     {
+        $possible_types = [
+            'remember',
+            'rememberForever'
+        ];
+
+        if (!in_array($this->remember_type, $possible_types)) {
+            throw new \Exception("You try to use wrong type of caching.");
+        }
+
         return $this->remember_type;
     }
 
@@ -276,7 +221,7 @@ trait CacheRoutine
      *
      * @return bool
      */
-    protected function isCaching()
+    protected function idCacheActivated()
     {
         if (!empty($this->is_caching)) {
             return $this->is_caching;

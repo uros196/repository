@@ -3,12 +3,14 @@
 namespace Repository;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 abstract class ServiceRepository
 {
-    use Container\Paginator,
+    use ForwardsCalls,
+        Container\Paginator,
         Container\CacheRoutine,
-        Container\BaseMethods,
         Container\QueryBuilder;
 
     /**
@@ -69,74 +71,15 @@ abstract class ServiceRepository
      * Execute the query as a "select" statement.
      *
      * @param  array|string  $columns
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
     protected function get($columns = ['*'])
     {
-        if (!$this->isBuilderRequired()) {
-            $cache_key = $this->generateCacheKey();
+        $query_closure = function () use ($columns) {
+            return $this->getBuilder()->get($columns);
+        };
 
-            return $this->buildCacheWithKey($cache_key, function () use ($columns) {
-                return $this->getBuilder()->get($columns);
-            });
-        } else {
-            return $this->returnQueryBuilder();
-        }
-    }
-
-    /**
-     * Retrieve the "count" result of the query.
-     *
-     * @param  string  $columns
-     * @return int
-     */
-    protected function count($columns = '*')
-    {
-        return $this->aggregate(__FUNCTION__, $columns);
-    }
-
-    /**
-     * Retrieve the minimum value of a given column.
-     *
-     * @param  string  $column
-     * @return mixed
-     */
-    protected function min($column)
-    {
-        return $this->aggregate(__FUNCTION__, $column);
-    }
-
-    /**
-     * Retrieve the maximum value of a given column.
-     *
-     * @param  string  $column
-     * @return mixed
-     */
-    protected function max($column)
-    {
-        return $this->aggregate(__FUNCTION__, $column);
-    }
-
-    /**
-     * Retrieve the sum of the values of a given column.
-     *
-     * @param  string  $column
-     * @return mixed
-     */
-    protected function sum($column)
-    {
-        return $this->aggregate(__FUNCTION__, $column);
-    }
-
-    /**
-     * Retrieve the average of the values of a given column.
-     *
-     * @param  string  $column
-     * @return mixed
-     */
-    protected function avg($column)
-    {
-        return $this->aggregate(__FUNCTION__, $column);
+        return $this->run($query_closure, __FUNCTION__);
     }
 
     /**
@@ -147,26 +90,74 @@ abstract class ServiceRepository
      */
     protected function executeRaw(string $query)
     {
-        return $this->buildCache($query);
+        $query_closure = function () use ($query) {
+            return DB::select($query);
+        };
+
+        if ($this->idCacheActivated()) {
+            $key = $this->generateCacheKey($query);
+            return $this->buildCacheWithKey($key, $query_closure);
+        }
+
+        return $query_closure();
     }
 
     /**
-     * Execute an aggregate function on the database.
-     *
-     * @param  string  $function
-     * @param  string  $columns
-     * @return mixed
+     * @param \Closure $callback
+     * @param string $cache_tags
+     * @return \Illuminate\Database\Eloquent\Builder|mixed
      */
-    private function aggregate(string $function, $columns)
+    private function run(\Closure $callback, $cache_tags = '')
     {
         if (!$this->isBuilderRequired()) {
-            $cache_key = $this->generateCacheKey($this->getSql(), [$function, 'aggregate']);
+            if ($this->idCacheActivated()) {
+                $cache_key = $this->generateCacheKey(null, $cache_tags);
+                return $this->buildCacheWithKey($cache_key, $callback);
+            }
 
-            return $this->buildCacheWithKey($cache_key, function () use ($function, $columns) {
-                return $this->getBuilder()->{$function}($columns);
-            });
-        } else {
-            return $this->returnQueryBuilder();
+            $data = $callback();
+            return $data instanceof \Illuminate\Database\Eloquent\Builder
+                ?   $this->getBuilder()
+                :   $data;
         }
+
+        return $this->returnQueryBuilder();
+    }
+
+    /**
+     * @param $object
+     * @param $method
+     * @return bool|string
+     *
+     * @throws \ReflectionException
+     */
+    private function getMethodReturnType($object, $method)
+    {
+        $reflection = new \ReflectionClass($object);
+        return $reflection->getMethod($method)->getDocComment();
+    }
+
+    /**
+     * Handle dynamic method calls into eloquent builder.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     *
+     * @throws \ReflectionException
+     */
+    public function __call($method, $parameters)
+    {
+        $query_closure = function () use ($method, $parameters) {
+            return $this->forwardCallTo($this->getBuilder(), $method, $parameters);
+        };
+
+//        try {
+//            $type = $this->getMethodReturnType($this->getBuilder(), $method);
+//        } catch (\Exception $exception) {
+//            $type = $this->getMethodReturnType($this->getBuilder()->getQuery(), $method);
+//        }
+
+        return $this->run($query_closure, $method);
     }
 }
