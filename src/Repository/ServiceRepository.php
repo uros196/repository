@@ -15,11 +15,15 @@ abstract class ServiceRepository
         Container\QueryBuilder;
 
     /**
+     * Holds name of actial model.
+     *
      * @var string $model
      */
     protected $model;
 
     /**
+     * Holds instance of actual model.
+     *
      * @var Model $model
      */
     private $model_instace;
@@ -84,7 +88,7 @@ abstract class ServiceRepository
     }
 
     /**
-     * Execute raw query
+     * Execute raw query.
      *
      * @param string $query
      * @return array
@@ -104,6 +108,8 @@ abstract class ServiceRepository
     }
 
     /**
+     * Final method.
+     *
      * @param \Closure $callback
      * @param string $cache_tags
      * @return \Illuminate\Database\Eloquent\Builder|mixed
@@ -116,6 +122,7 @@ abstract class ServiceRepository
                 return $this->buildCacheWithKey($cache_key, $callback);
             }
 
+            // just execute a query without all benefits.
             return $callback();
         }
 
@@ -123,6 +130,8 @@ abstract class ServiceRepository
     }
 
     /**
+     * Take a method return type.
+     *
      * @param $object
      * @param $method
      * @return mixed
@@ -141,7 +150,27 @@ abstract class ServiceRepository
     }
 
     /**
-     * Handle dynamic method calls into eloquent builder.
+     * Check that the method at the end of the chain is called (if the actual query is running).
+     *
+     * @param string $method
+     * @return bool
+     *
+     * @throws \ReflectionException
+     */
+    private function isFinalMethod(string $method): bool
+    {
+        try {
+            $type = $this->getMethodReturnType($this->getBuilder(), $method);
+        } catch (\Exception $exception) {
+            $type = $this->getMethodReturnType($this->getBuilder()->getQuery(), $method);
+        }
+
+        return !($type instanceof \Illuminate\Database\Eloquent\Builder ||
+                 $type instanceof \Illuminate\Database\Query\Builder);
+    }
+
+    /**
+     * Handle dynamic method calls into Eloquent or Query builder.
      *
      * @param  string  $method
      * @param  array  $parameters
@@ -155,17 +184,13 @@ abstract class ServiceRepository
             return $this->forwardCallTo($this->getBuilder(), $method, $parameters);
         };
 
-        try {
-            $type = $this->getMethodReturnType($this->getBuilder(), $method);
-        } catch (\Exception $exception) {
-            $type = $this->getMethodReturnType($this->getBuilder()->getQuery(), $method);
+        // check if is end point method like a get(), max()... or any other
+        // then execute query
+        if ($this->isFinalMethod($method)) {
+            return $this->run($query_closure, $method);
         }
 
-        if ($type instanceof \Illuminate\Database\Eloquent\Builder ||
-            $type instanceof \Illuminate\Database\Query\Builder) {
-            return $this->buildQuery($query_closure);
-        }
-
-        return $this->run($query_closure, $method);
+        // in other case just build a query
+        return $this->buildQuery($query_closure);
     }
 }
