@@ -20,7 +20,7 @@ trait CacheRoutine
     /**
      * @var string $remember_type
      */
-    private $remember_type = 'remember';
+    private $remember_type;
 
     /**
      * @var \DateTimeInterface|\DateInterval|int $remember_time
@@ -83,6 +83,10 @@ trait CacheRoutine
      */
     public function useCache(bool $cache_state)
     {
+        if ($cache_state) {
+            return $this->remember();
+        }
+
         $this->is_caching = $cache_state;
         return $this;
     }
@@ -179,7 +183,7 @@ trait CacheRoutine
             return $this->duration;
         }
 
-        return config('repository.cache.duration');
+        return config('db-repository.cache.duration');
     }
 
     /**
@@ -193,7 +197,7 @@ trait CacheRoutine
             return $this->cache_store_engine;
         }
 
-        return config('repository.cache.engine');
+        return config('db-repository.cache.engine');
     }
 
     /**
@@ -223,10 +227,12 @@ trait CacheRoutine
      */
     protected function idCacheActivated()
     {
+        $force_disable = (bool)config('db-repository.cache.force_disable');
+
         if (!empty($this->is_caching)) {
-            return $this->is_caching;
+            return $this->is_caching && !$force_disable;
         }
 
-        return config('repository.cache.default');
+        return (bool)config('db-repository.cache.default') && !$force_disable;
     }
 }

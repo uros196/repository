@@ -44,7 +44,7 @@ class RepositoryServiceProvider extends ServiceProvider
     protected function publish(): void
     {
         $this->publishes([
-            __DIR__ . "/../config/repository.php" => config_path('repository.php')
+            __DIR__ . "/../config/db-repository.php" => config_path('db-repository.php')
         ]);
     }
 }

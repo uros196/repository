@@ -5,6 +5,7 @@ namespace Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Traits\ForwardsCalls;
+use Repository\Helpers\DocBlockParser;
 
 abstract class ServiceRepository
 {
@@ -115,10 +116,7 @@ abstract class ServiceRepository
                 return $this->buildCacheWithKey($cache_key, $callback);
             }
 
-            $data = $callback();
-            return $data instanceof \Illuminate\Database\Eloquent\Builder
-                ?   $this->getBuilder()
-                :   $data;
+            return $callback();
         }
 
         return $this->returnQueryBuilder();
@@ -127,14 +125,19 @@ abstract class ServiceRepository
     /**
      * @param $object
      * @param $method
-     * @return bool|string
+     * @return mixed
      *
      * @throws \ReflectionException
      */
     private function getMethodReturnType($object, $method)
     {
         $reflection = new \ReflectionClass($object);
-        return $reflection->getMethod($method)->getDocComment();
+        $doc = $reflection->getMethod($method)->getDocComment();
+
+        $parser = new DocBlockParser($doc);
+        $return_statement = $parser->return();
+
+        return $return_statement != '$this' ?: $object;
     }
 
     /**
@@ -152,11 +155,16 @@ abstract class ServiceRepository
             return $this->forwardCallTo($this->getBuilder(), $method, $parameters);
         };
 
-//        try {
-//            $type = $this->getMethodReturnType($this->getBuilder(), $method);
-//        } catch (\Exception $exception) {
-//            $type = $this->getMethodReturnType($this->getBuilder()->getQuery(), $method);
-//        }
+        try {
+            $type = $this->getMethodReturnType($this->getBuilder(), $method);
+        } catch (\Exception $exception) {
+            $type = $this->getMethodReturnType($this->getBuilder()->getQuery(), $method);
+        }
+
+        if ($type instanceof \Illuminate\Database\Eloquent\Builder ||
+            $type instanceof \Illuminate\Database\Query\Builder) {
+            return $this->buildQuery($query_closure);
+        }
 
         return $this->run($query_closure, $method);
     }

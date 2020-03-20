@@ -18,5 +18,8 @@ return [
 
         // use cache engine
         'engine' => config('cache.default')
+
+        // force disable cache for all repositories globally
+        // 'force_disable' => true
     ]
 ];
