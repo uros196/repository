@@ -91,20 +91,24 @@ abstract class ServiceRepository
      * Execute raw query.
      *
      * @param string $query
-     * @return array
+     * @return array|string
      */
     protected function executeRaw(string $query)
     {
-        $query_closure = function () use ($query) {
-            return DB::select($query);
-        };
+        if (!$this->isBuilderRequired()) {
+            $query_closure = function () use ($query) {
+                return DB::select($query);
+            };
 
-        if ($this->idCacheActivated()) {
-            $key = $this->generateCacheKey($query);
-            return $this->buildCacheWithKey($key, $query_closure);
+            if ($this->idCacheActivated()) {
+                $key = $this->generateCacheKey($query);
+                return $this->buildCacheWithKey($key, $query_closure);
+            }
+
+            return $query_closure();
         }
 
-        return $query_closure();
+        return $query;
     }
 
     /**

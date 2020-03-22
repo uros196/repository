@@ -14,6 +14,7 @@ return [
         'default' => false,
 
         // cache duration 1000 sec
+        // acceptable types: DateTimeInterface, DateInterval orint
         'duration' => 1000,
 
         // use cache engine
