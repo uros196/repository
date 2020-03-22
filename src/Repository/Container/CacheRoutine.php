@@ -57,7 +57,7 @@ trait CacheRoutine
             $this->duration = $duration;
         }
         $this->remember_type = 'remember';
-        $this->is_caching = true;
+        $this->is_caching    = true;
 
         return $this;
     }
@@ -70,7 +70,7 @@ trait CacheRoutine
     public function rememberForever()
     {
         $this->remember_type = 'rememberForever';
-        $this->is_caching = true;
+        $this->is_caching    = true;
 
         return $this;
     }
@@ -78,13 +78,14 @@ trait CacheRoutine
     /**
      * Use this function inside your service container when you need dynamic cache handler.
      *
+     * @param string|null $remember_type
      * @param bool $cache_state
      * @return $this
      */
-    public function useCache(bool $cache_state)
+    public function useCache(bool $cache_state, ?string $remember_type = null)
     {
         if ($cache_state) {
-            return $this->remember();
+            return $this->{$remember_type ?? 'remember'}();
         }
 
         $this->is_caching = $cache_state;

@@ -11,18 +11,8 @@ use {{ serviceContainerNamespace }}\{{ serviceContainerClass }};
  * @method static {{ serviceContainerClass }} store(string $store_engine = null)
  * @method static {{ serviceContainerClass }} remember(\DateTimeInterface|\DateInterval|int $duration = null)
  * @method static {{ serviceContainerClass }} rememberForever()
+ * @method static {{ serviceContainerClass }} useCache(bool $cache_state, ?string $remember_type = null)
  * @method static {{ serviceContainerClass }} requireBuilder(bool $require = true)
- *
- * @method static \Illuminate\Database\Eloquent\Model firstWhere($column, $operator = null, $value = null, $boolean = 'and')
- * @method static \Illuminate\Database\Eloquent\Model find($id, array $columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Collection findMany($ids, array $columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Model findOrFail($id, array $columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Model|static findOrNew($id, array $columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Model|static firstOrNew(array $attributes = [], array $values = [])
- * @method static \Illuminate\Database\Eloquent\Model|static firstOrCreate(array $attributes, array $values = [])
- * @method static \Illuminate\Database\Eloquent\Model|static firstOrFail($columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Model|static|mixed firstOr($columns = ['*'], \Closure $callback = null)
- * @method static mixed value(string $column)
  */
 class {{ class }} extends Facade
 {
