@@ -1,14 +1,17 @@
 Repository package in development...
 
-#What is this?
+What is this?
+-
 This package is powerful and fully customizable DB model repository for storing a queries.
 
-##How to intall package?
+How to intall package?
+--
 ```
 composer require repository/repository
 ```
 
-##Make new repository with artisan command
+Make new repository with artisan command
+--
 ```
 php artisan make:repository ExampleRepository
 ```
@@ -19,7 +22,8 @@ But if you want to use another model, you can require that.
 php artisan make:repository ExampleRepository --model NewModel
 ```
 
-##How to access methods from `ServiceContainer`?
+How to access methods from `ServiceContainer`?
+--
 
 It's simple, just call your `Repository` facade.
 ```php
@@ -70,7 +74,9 @@ $this->useCache(cache_state:, ?remember_type:);
 $this->store('cache_engine');
 ```
 
-###Well that's nice but where is all that 'customizable'?
+Well that's nice but where is all that 'customizable'?
+---
+
 All of these methods above you can use in fly, and more. Look.
 ```php
 ExampleRepository::remember()->simpleMethod();
@@ -85,7 +91,8 @@ ExampleRepository::requireBuilder()->simpleMethod()->max('salary');
 ```
 > <i>Note: keep in mind that `requireBuilder()` exclude all repository benefits (like caching).</i>
 
-###That's all?
+That's all?
+---
 Of cource it is not. Repository gives you a possibility to modify queries on fly.
 ```php
 ExampleRepository::orderBy('hire_date', 'desc')->simpleMethod();
