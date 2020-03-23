@@ -38,8 +38,8 @@ public function simpleMethod()
     // $builder is instance of \Illuminate\Database\Eloquent\Builder so you can 
     // regularly use builder's methods whatever you want.
     $this->buildQuery(function (Builder $builder) {
-        $builder->where('destination', 'San Diego')
-                ->take(20);
+        return $builder->where('destination', 'San Diego')
+                       ->take(20);
     });
     
     // this actually execute your query
